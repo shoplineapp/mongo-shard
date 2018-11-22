@@ -1,0 +1,65 @@
+version: '2'
+services:
+  ## Config Servers
+  config01:
+    image: mongo
+    command: mongod --port 27019 --configsvr --replSet configserver --noprealloc --smallfiles --oplogSize 16
+    container_name: config01
+    volumes:
+      - ./scripts:/scripts
+  config02:
+    image: mongo
+    command: mongod --port 27019 --configsvr --replSet configserver --noprealloc --smallfiles --oplogSize 16
+    container_name: config02
+    volumes:
+      - ./scripts:/scripts
+  config03:
+    image: mongo
+    container_name: config03
+    command: mongod --port 27019 --configsvr --replSet configserver --noprealloc --smallfiles --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+
+  ## Shards
+  shard01a:
+    image: mongo
+    container_name: shard01a
+    command: mongod --port 27018 --shardsvr --replSet shard01 --noprealloc --smallfiles --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+  shard01b:
+    image: mongo
+    container_name: shard01b
+    command: mongod --port 27018 --shardsvr --replSet shard01 --noprealloc --smallfiles --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+  shard02a:
+    image: mongo
+    container_name: shard02a
+    command: mongod --port 27018 --shardsvr --replSet shard02 --noprealloc --smallfiles --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+  shard02b:
+    image: mongo
+    container_name: shard02b
+    command: mongod --port 27018 --shardsvr --replSet shard02 --noprealloc --smallfiles --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+
+  ## Router
+  router:
+    image: mongo
+    container_name: mongos
+    command: mongos --port 27017 --configdb configserver/config01:27018,config02:27018,config03:27018 --bind_ip_all
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./scripts:/scripts
+    depends_on:
+      - config01
+      - config02
+      - config03
+      - shard01a
+      - shard01b
+      - shard02a
+      - shard02b
